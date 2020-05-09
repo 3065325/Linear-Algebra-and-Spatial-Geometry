@@ -12,7 +12,7 @@ let vw = canvas.width / 100;
 let vh = canvas.height / 100;
 
 const vectorAmount = 25;
-let vectors = new Array(vectorAmount ** 2);
+let vectors = [];
 
 let scale = 10;
 for (let i = 0; i < vectorAmount; i++) {
@@ -23,6 +23,21 @@ for (let i = 0; i < vectorAmount; i++) {
         ])
     }
 }
+
+setInterval(() => {
+    let length = vectors.length;
+    for (let i = 0; i < vectorAmount; i++) {
+        for (let j = 0; j < vectorAmount; j++) {
+            vectors[length + j + i*vectorAmount] = new Matrix([
+                [(i - vectorAmount/2)*scale*vh],
+                [(j - vectorAmount/2)*scale*vh]
+            ])
+        }
+    }
+}, 5000);
+
+vectors[0].print();
+vectors[0].transpose().print();
 
 let t = Math.PI/180;
 let R = new Matrix([
@@ -66,12 +81,12 @@ setInterval(() => {
     c.fillRect(0, 0, canvas.width, canvas.height);
     c.translate(50*vw, 50*vh);
 
-    for (let i = 0; i < vectorAmount ** 2; i++) {
+    for (let i = 0; i < vectors.length; i++) {
         let vector = vectors[i];
 
         drawVector(vector, "#ffffff");
 
-        vectors[i] = Matrix.mult(R, vector);
+        vectors[i] = Matrix.mult(R.mult(0.999), vector);
     }
 
-}, 1000/60);
+}, 1000/120);
