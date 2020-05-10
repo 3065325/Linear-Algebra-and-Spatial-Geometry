@@ -41,12 +41,34 @@ export class Matrix {
                 if (l === j - 1) {
                     continue;
                 }
-                
+
                 M1Row[M1Row.length] = this.components[k][l];
             }
         }
 
         return new Matrix(M1);
+    }
+
+    det() {
+        if (this.components.length !== this.components[0].length) {
+            console.log(`Attempted to get the determinant of a non-square ${this.components.length}x${this.components[0].length} Matrix`);
+            return undefined;
+        }
+
+        if (this.components.length <= 2) {
+            return Matrix.det2(this);
+        }
+
+        let i = 0;
+        let sum = 0;
+        for (let j = 0; j < this.components.length; j++) {
+            sum += this.components[i][j] * Math.pow(-1, i + 1 + j + 1) * this.minor(i + 1, j + 1).det();
+        }
+        return sum;
+    }
+
+    cofactor(i, j) {
+        return this.component(i, j) * Math.pow(-1, i + j) * this.minor(i, j);
     }
 
     transpose() {
@@ -63,15 +85,52 @@ export class Matrix {
         return new Matrix(M1);
     }
 
+    inverse() {
+        let thisDeterminant = this.det();
+
+        if (thisDeterminant === 0) {
+            console.log(`Attempted to get the inverse of a Matrix with a determinant of 0`);
+            return undefined;
+        }
+
+        let M1 = new Array(this.components.length);
+        for (let i = 0; i < this.components.length; i++) {
+
+            M1[i] = new Array(this.components[0].length);
+            let M1Row = M1[i];
+            for (let j = 0; j < this.components[0].length; j++) {
+
+                M1Row[j] = Math.pow(-1, i+1 + j+1) * this.minor(i+1, j+1).det();
+            }
+        }
+        return new Matrix(M1).transpose().mult(1/thisDeterminant);
+    }
+
     print() {
         let String = "";
         for (let i = 1; i <= this.components.length; i++) {
+            String = `${String}`;
             for (let j = 1; j <= this.components[0].length; j++) {
                 String = `${String} ${this.component(i, j)}`;
             }
             String = `${String}\n`;
         }
         console.log(String);
+    }
+
+    normalize() {
+        if (this.components[0].length != 1) {
+            console.log(`Attempted to normalize a non-Vector ${this.components.length}x${this.components[0].length} Matrix`);
+            return undefined;
+        }
+
+        let sum = 0;
+        for (let i = 0; i < this.components.length; i++) {
+            sum += this.components[i][0]**2;
+        }
+        let mag = Math.sqrt(sum);
+
+        return this.mult(1/mag);
     }
 
     static add(M1, M2) {
@@ -146,18 +205,14 @@ export class Matrix {
         return Matrix.mult(M1.transpose(), M2);
     }
 
-    static cofactor(i, j) {
-        return Math.pow(-1, i + j);
-    }
-
     static det2(M1) {
+        if (M1.components.length === 1 && M1.components[0].length === 1) {
+            return M1.component(1, 1);
+        }
+
         if (M1.components.length !== 2 || M1.components[0].length !== 2) {
             console.log(`Attempted to get the 2x2 determinant of a ${M1.components.length}x${M1.components[0].length} Matrix`);
             return undefined;
-        }
-
-        if (M1.components.length === 1) {
-            return M1.component(1, 1);
         }
 
         return M1.component(1, 1) * M1.component(2, 2) - M1.component(1, 2) * M1.component(2, 1);
