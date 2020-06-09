@@ -109,7 +109,7 @@ export class Quaternion {
             [RV.I],
             [RV.J],
             [RV.K]
-        ])
+        ]);
     }
 
     vectorForm() {

@@ -1,57 +1,89 @@
-"use strict"
-
 import {
     Matrix
 } from "./matrices.js";
+
 import {
-    Complex,
     Quaternion
 } from "./complex.js";
 
-const canvas = document.querySelector("canvas");
-const c = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-let vw = canvas.width / 100;
-let vh = canvas.height / 100;
+var scene = new THREE.Scene();
+var renderer, camera;
+var controls;
 
-let V = new Matrix([
+let cubeAmount = 10;
+let cubeScale = 3;
+let cubes = new Array(cubeAmount ** 3);
+let cubePositions = new Array(cubes.length);
+
+for (let i = 0; i < cubeAmount; i++) {
+    for (let j = 0; j < cubeAmount; j++) {
+        for (let k = 0; k < cubeAmount; k++) {
+            let index = k + cubeAmount * j + cubeAmount ** 2 * i;
+            let cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshNormalMaterial());
+
+            cubePositions[index] = new Matrix([
+                [i * cubeScale - (cubeAmount * cubeScale/2 - 1)],
+                [j * cubeScale - (cubeAmount * cubeScale/2 - 1)],
+                [k * cubeScale - (cubeAmount * cubeScale/2 - 1)]
+            ]);
+            cube.position.set(cubePositions[index].component(1, 1), cubePositions[index].component(2, 1), cubePositions[index].component(3, 1));
+            
+            scene.add(cube);
+            cubes[index] = cube;
+        }
+    }
+}
+
+let Skew = new Matrix([
+    [1, -0.005, 0],
+    [-0.005, 1, 0],
+    [0, 0, 1]
+]);
+
+let AoR = new Matrix([
     [1],
     [1],
     [1]
-]);
-
-let AxisOfRotation = new Matrix([
-    [-1],
-    [1],
-    [-1]
 ]).normalize();
 
-let speedMultiplier = 2;
-let RotationQuaternion = Quaternion.rotationQuaternion(1, AxisOfRotation.mult(speedMultiplier));
+let RPM = 30;
+let RQ = Quaternion.rotationQuaternion(RPM/60, AoR)
 
-function drawVector(vector, color) {
-    c.beginPath();
-    c.strokeStyle = color;
-    c.moveTo(0, 0);
-    c.lineTo(vector.component(1, 1), vector.component(2, 1));
-    c.stroke();
+init();
+animate();
 
-    c.fillStyle = color;
-    c.fillRect(vector.component(1, 1) - 1, vector.component(2, 1) - 1, 3, 3);
+function init() {
+    renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    renderer.setSize(width, height);
+    document.body.appendChild(renderer.domElement);
+
+    camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+    camera.position.y = 32;
+    camera.position.z = 80;
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    var gridXZ = new THREE.GridHelper(1000, 1000);
+    gridXZ.setColors(new THREE.Color(0xff0000), new THREE.Color(0xffffff));
+    scene.add(gridXZ);
 }
 
-setInterval(() => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    vw = canvas.width / 100;
-    vh = canvas.height / 100;
+function animate() {
+    controls.update();
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
 
-    c.fillStyle = '#161616';
-    c.fillRect(0, 0, canvas.width, canvas.height);
-    c.translate(50 * vw, 50 * vh);
+    for (let i = 0; i < cubeAmount ** 3; i++) {
+        let cube = cubes[i];
+        let cubePosition = cubePositions[i];
 
-    drawVector(V.mult(10 * vh), "#ffffff");
-    V = RotationQuaternion.rotate(V);
+        cubePositions[i] = RQ.rotate(cubePosition);
 
-}, 1000 / 60);
+        cube.position.set(cubePosition.component(1, 1), cubePosition.component(2, 1), cubePosition.component(3, 1));
+    }
+}
