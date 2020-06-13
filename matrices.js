@@ -11,7 +11,7 @@ export class Matrix {
         return M1;
     }
 
-    static Random(rows, columns, min, max) {
+    static toRandom(rows, columns, min, max) {
         if (!min) {
             min = 0;
         }
@@ -35,17 +35,71 @@ export class Matrix {
         return M1;
     }
 
-    static Vector(A1) {
-        let M1 = new Array(A1.length);
+    static toVector(A1) {
+        let V1 = new Array(A1.length);
         
+        for (let i = 0; i < V1.length; i++) {
+            V1[i] = [A1[i]];
+        }
+
+        return V1;
+    }
+
+    static fromVectors(A1) {
+        let V1Length = A1[0].length;
+
+        for (let i = 1; i < A1.length; i++) {
+            if (A1[i].length !== V1Length) {
+                console.log(`Attempted to concatenate a ${V1length}x1 Vector by a ${A1[i].length}x1 Vector`);
+                return undefined;
+            }
+        }
+
+        let M1 = new Array(A1[0].length);
+
         for (let i = 0; i < M1.length; i++) {
-            let M1Row = new Array(1);
-            M1Row[0] = A1[i];
+            let M1Row = new Array(A1.length);
+
+            for (let j = 0; j < M1Row.length; j++) {
+                M1Row[j] = A1[j][i][0];
+            }
 
             M1[i] = M1Row;
         }
 
-        return M1
+        return M1;
+    }
+
+    static toArray(M1) {
+        let A1 = new Array(M1.length * M1[0].length);
+        
+        for (let i = 0; i < M1.length; i++) {
+            let M1Row = M1[0];
+            let offset = i * M1Row.length;
+
+            for (let j = 0; j < M1Row.length; j++) {
+                A1[offset + j] = M1Row[j];
+            }
+        }
+
+        return A1;
+    }
+
+    static map(M1, func) {
+        let M2 = new Array(M1.length);
+
+        for (let i = 0; i < M1.length; i++) {
+            let M1Row = M1[i];
+            let M2Row = new Array(M1[0].length);
+
+            for (let j = 0; j < M2Row.length; j++) {
+                M2Row[j] = func(M1Row[j]);
+            }
+
+            M2[i] = M2Row;
+        }
+
+        return M2;
     }
 
     static add(M1, M2) {
@@ -57,9 +111,9 @@ export class Matrix {
         let M3 = new Array(M1.length);
 
         for (let i = 0; i < M1.length; i++) {
-            M1Row = M1[i];
-            M2Row = M2[i];
-            M3Row = new Array(M1[0].length);
+            let M1Row = M1[i];
+            let M2Row = M2[i];
+            let M3Row = new Array(M1[0].length);
 
             for (let j = 0; j < M3Row.length; j++) {
                 M3Row[j] = M1Row[j] + M2Row[j];
@@ -80,9 +134,9 @@ export class Matrix {
         let M3 = new Array(M1.length);
 
         for (let i = 0; i < M1.length; i++) {
-            M1Row = M1[i];
-            M2Row = M2[i];
-            M3Row = new Array(M1[0].length);
+            let M1Row = M1[i];
+            let M2Row = M2[i];
+            let M3Row = new Array(M1[0].length);
 
             for (let j = 0; j < M3Row.length; j++) {
                 M3Row[j] = M1Row[j] - M2Row[j];
@@ -98,8 +152,8 @@ export class Matrix {
         let M2 = new Array(M1.length);
 
         for (let i = 0; i < M1.length; i++) {
-            M1Row = M1[i];
-            M2Row = new Array(M1[0].length);
+            let M1Row = M1[i];
+            let M2Row = new Array(M1[0].length);
 
             for (let j = 0; j < M2Row.length; j++) {
                 M2Row[j] = M1Row[j] * s;
@@ -120,7 +174,7 @@ export class Matrix {
         let M3 = new Array(M1.length);
 
         for (let i = 0; i < M1.length; i++) {
-            M3Row = new Array(M2[0].length);
+            let M3Row = new Array(M2[0].length);
 
             for (let j = 0; j < M2[0].length; j++) {
                 let M1Row = M1[i];
@@ -135,6 +189,31 @@ export class Matrix {
 
             M3[i] = M3Row;
         }
+
+        return M3
+    }
+
+    static multH(M1, M2) {
+        if (M1.length !== M2.length || M1[0].length != M2[0].length) {
+            console.log(`Attempted to hadamard a ${M1.length}x${M1[0].length} Matrix by a ${M2.length}x${M2[0].length} Matrix`);
+            return undefined;
+        }
+
+        let M3 = new Array(M1.length);
+
+        for (let i = 0; i < M1.length; i++) {
+            let M1Row = M1[i];
+            let M2Row = M2[i];
+            let M3Row = new Array(M1[0].length);
+
+            for (let j = 0; j < M3Row.length; j++) {
+                M3Row[j] = M1Row[j] * M2Row[j];
+            }
+
+            M3[i] = M3Row;
+        }
+
+        return M3;
     }
 
     static transpose(M1) {
